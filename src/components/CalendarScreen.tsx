@@ -21,6 +21,9 @@ import {
   IEvent,
 } from "../app/backend";
 import { useEffect, useState } from "react";
+import { addMonths, formatMonth, getToday } from "../helpers/dateFunctions";
+import { useParams } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 const DAYS_OF_WEEK = ["DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SÁB"];
 
@@ -62,12 +65,14 @@ const useStyles = makeStyles({
 });
 
 export default function CalendarScreen() {
+  const { month } = useParams<{ month: string }>();
+
   const classes = useStyles();
   const [calendars, setCalendars] = useState<ICalendar[]>([]);
   const [calendarsSelected, setCalendarsSelected] = useState<boolean[]>([]);
   const [events, setEvents] = useState<IEvent[]>([]);
   const weeks = generateCalendar(
-    getToday(),
+    month + "-01",
     events,
     calendars,
     calendarsSelected
@@ -124,15 +129,23 @@ export default function CalendarScreen() {
       <Box display="flex" flexDirection="column">
         <Box display="flex" alignItems="center" padding="8px 16px">
           <Box>
-            <IconButton aria-label="Mês anterior">
+            <IconButton
+              aria-label="Mês anterior"
+              component={Link}
+              to={"/calendar/" + addMonths(month, -1)}
+            >
               <Icon>chevron_left</Icon>
             </IconButton>
-            <IconButton aria-label="Próximo mês">
+            <IconButton
+              aria-label="Próximo mês"
+              component={Link}
+              to={"/calendar/" + addMonths(month, 1)}
+            >
               <Icon>chevron_right</Icon>
             </IconButton>
           </Box>
           <Box flex={1} marginLeft="16px" component="h3">
-            <strong>Junho de 2021</strong>
+            <strong>{formatMonth(month)}</strong>
           </Box>
           <Avatar></Avatar>
         </Box>
@@ -245,8 +258,4 @@ function generateCalendar(
   } while (currentDay.getMonth() === currentMonth);
 
   return weeks;
-}
-
-function getToday() {
-  return "2021-06-17";
 }
