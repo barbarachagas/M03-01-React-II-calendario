@@ -1,18 +1,4 @@
-import {
-  Avatar,
-  Box,
-  Checkbox,
-  FormControlLabel,
-  Icon,
-  IconButton,
-} from "@material-ui/core";
-import { makeStyles } from "@material-ui/core/styles";
-import Table from "@material-ui/core/Table";
-import TableBody from "@material-ui/core/TableBody";
-import TableCell from "@material-ui/core/TableCell";
-import TableContainer from "@material-ui/core/TableContainer";
-import TableHead from "@material-ui/core/TableHead";
-import TableRow from "@material-ui/core/TableRow";
+import { Box } from "@material-ui/core";
 import Button from "@material-ui/core/Button";
 import {
   getCalendarsEndpoint,
@@ -21,53 +7,14 @@ import {
   IEvent,
 } from "../app/backend";
 import { useEffect, useState } from "react";
-import { addMonths, formatMonth, getToday } from "../helpers/dateFunctions";
 import { useParams } from "react-router-dom";
-import { Link } from "react-router-dom";
-
-const DAYS_OF_WEEK = ["DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SÁB"];
-
-const useStyles = makeStyles({
-  root: {
-    height: "100%",
-  },
-  table: {
-    minHeight: "100%",
-    tableLayout: "fixed",
-    "& td ~ td, & th ~ th": {
-      borderLeft: "1px solid rgb(224, 224, 224)",
-    },
-    "& td": {
-      verticalAlign: "top",
-      overflow: "hidden",
-      padding: "8px 4px",
-    },
-  },
-  dayOfMonth: {
-    fontWeight: 500,
-    marginBottom: "4px",
-  },
-  event: {
-    display: "flex",
-    alignItems: "center",
-    background: "none",
-    border: "none",
-    cursor: "pointer",
-    textAlign: "left",
-    whiteSpace: "nowrap",
-    margin: "4px 0",
-  },
-  eventBackground: {
-    color: "white",
-    padding: "2px 4px",
-    borderRadius: "4px",
-  },
-});
+import CalendarsView from "./CalendarsView";
+import CalendarHeader from "./CalendarHeader";
+import Calendar, { ICalendarCell, IEventWCalendar } from "./Calendar";
 
 export default function CalendarScreen() {
   const { month } = useParams<{ month: string }>();
 
-  const classes = useStyles();
   const [calendars, setCalendars] = useState<ICalendar[]>([]);
   const [calendarsSelected, setCalendarsSelected] = useState<boolean[]>([]);
   const [events, setEvents] = useState<IEvent[]>([]);
@@ -109,107 +56,18 @@ export default function CalendarScreen() {
           Novo Evento
         </Button>
 
-        <Box marginTop="64px">
-          <h2>Agendas</h2>
-          {calendars.map((calendar, i) => (
-            <FormControlLabel
-              key={calendar.id}
-              control={
-                <Checkbox
-                  style={{ color: calendar.color }}
-                  checked={calendarsSelected[i]}
-                  onChange={() => toggleCalendar(i)}
-                />
-              }
-              label={calendar.name}
-            />
-          ))}
-        </Box>
+        <CalendarsView
+          calendars={calendars}
+          toggleCalendar={toggleCalendar}
+          calendarsSelected={calendarsSelected}
+        />
       </Box>
-      <Box display="flex" flexDirection="column">
-        <Box display="flex" alignItems="center" padding="8px 16px">
-          <Box>
-            <IconButton
-              aria-label="Mês anterior"
-              component={Link}
-              to={"/calendar/" + addMonths(month, -1)}
-            >
-              <Icon>chevron_left</Icon>
-            </IconButton>
-            <IconButton
-              aria-label="Próximo mês"
-              component={Link}
-              to={"/calendar/" + addMonths(month, 1)}
-            >
-              <Icon>chevron_right</Icon>
-            </IconButton>
-          </Box>
-          <Box flex={1} marginLeft="16px" component="h3">
-            <strong>{formatMonth(month)}</strong>
-          </Box>
-          <Avatar></Avatar>
-        </Box>
-        <TableContainer className={classes.root} component={"div"}>
-          <Table className={classes.table} aria-label="simple table">
-            <TableHead>
-              <TableRow>
-                {DAYS_OF_WEEK.map((day) => (
-                  <TableCell align="center">{day}</TableCell>
-                ))}
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {weeks.map((week, i) => (
-                <TableRow key={i}>
-                  {week.map((day) => (
-                    <TableCell align="center" key={day.date}>
-                      <div className={classes.dayOfMonth}>{day.dayOfMonth}</div>
-
-                      {day.events.map((event) => {
-                        const color = event.calendar.color;
-                        return (
-                          <button key={event.id} className={classes.event}>
-                            {event.time && (
-                              <>
-                                <Icon style={{ color }} fontSize="inherit">
-                                  watch_later
-                                </Icon>
-                                <Box component="span" margin="0 4px">
-                                  {event.time}
-                                </Box>
-                              </>
-                            )}
-                            {event.time ? (
-                              <span>{event.desc}</span>
-                            ) : (
-                              <div
-                                className={classes.eventBackground}
-                                style={{ backgroundColor: color }}
-                              >
-                                {event.desc}
-                              </div>
-                            )}
-                          </button>
-                        );
-                      })}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+      <Box flex="1" flexDirection="column">
+        <CalendarHeader month={month} />
+        <Calendar weeks={weeks} />
       </Box>
     </Box>
   );
-}
-
-type IEventWCalendar = IEvent & { calendar: ICalendar };
-
-interface ICalendarCell {
-  date: string;
-  dayOfMonth: number;
-  events: IEventWCalendar[];
 }
 
 function generateCalendar(
