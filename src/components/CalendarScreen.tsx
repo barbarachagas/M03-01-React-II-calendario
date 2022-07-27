@@ -4,6 +4,7 @@ import {
   getCalendarsEndpoint,
   getEventsEndpoint,
   ICalendar,
+  IEditingEvent,
   IEvent,
 } from "../app/backend";
 import { useEffect, useState } from "react";
@@ -11,6 +12,8 @@ import { useParams } from "react-router-dom";
 import CalendarsView from "./CalendarsView";
 import CalendarHeader from "./CalendarHeader";
 import Calendar, { ICalendarCell, IEventWCalendar } from "./Calendar";
+import EventFormDialog from "./EventFormDIalog";
+import { getToday } from "../helpers/dateFunctions";
 
 export default function CalendarScreen() {
   const { month } = useParams<{ month: string }>();
@@ -18,6 +21,8 @@ export default function CalendarScreen() {
   const [calendars, setCalendars] = useState<ICalendar[]>([]);
   const [calendarsSelected, setCalendarsSelected] = useState<boolean[]>([]);
   const [events, setEvents] = useState<IEvent[]>([]);
+  const [editingEvent, setEditingEvent] = useState<IEditingEvent | null>(null);
+
   const weeks = generateCalendar(
     month + "-01",
     events,
@@ -44,6 +49,18 @@ export default function CalendarScreen() {
     setCalendarsSelected(newValue);
   }
 
+  function refreshEvent() {
+    getEventsEndpoint(firstDate, lastDate).then(setEvents);
+  }
+
+  function openNewEvent() {
+    setEditingEvent({
+      date: getToday(),
+      desc: "",
+      calendarId: calendars[0].id,
+    });
+  }
+
   return (
     <Box display="flex" height="100%" alignItems="stretch">
       <Box
@@ -52,7 +69,7 @@ export default function CalendarScreen() {
         padding="8px 16px"
       >
         <h2>Agenda React</h2>
-        <Button variant="contained" color="primary">
+        <Button variant="contained" color="primary" onClick={openNewEvent}>
           Novo Evento
         </Button>
 
@@ -65,6 +82,15 @@ export default function CalendarScreen() {
       <Box flex="1" flexDirection="column">
         <CalendarHeader month={month} />
         <Calendar weeks={weeks} />
+        <EventFormDialog
+          event={editingEvent}
+          calendars={calendars}
+          onSave={() => {
+            setEditingEvent(null);
+            refreshEvent();
+          }}
+          onCancel={() => setEditingEvent(null)}
+        />
       </Box>
     </Box>
   );
