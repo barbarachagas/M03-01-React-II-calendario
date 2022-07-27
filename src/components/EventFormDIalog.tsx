@@ -73,6 +73,7 @@ export default function EventFormDialog(props: IEventFormDialogProps) {
       }
     }
   }
+
   function deleteEvent() {
     if (event) {
       deleteEventEndpoint(event.id!).then(props.onSave);

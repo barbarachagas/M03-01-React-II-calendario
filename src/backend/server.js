@@ -2,7 +2,6 @@
 
 const hasAuth = process.argv[2] !== "noauth";
 
-
 const fs = require("fs");
 const bodyParser = require("body-parser");
 const jsonServer = require("json-server");
@@ -69,7 +68,6 @@ server.post("/auth/logout", (req, res) => {
 });
 
 if (hasAuth) {
-
   server.use(/^(?!\/auth).*$/, (req, res, next) => {
     if (!req.session.user) {
       const status = 401;
@@ -83,6 +81,6 @@ if (hasAuth) {
 
 server.use(router);
 
-server.listen(8080, () => {
+server.listen(3002, () => {
   console.log(`Servidor inicializado, auth=${hasAuth}`);
 });
