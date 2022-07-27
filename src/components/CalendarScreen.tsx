@@ -7,11 +7,11 @@ import {
   IEditingEvent,
   IEvent,
 } from "../app/backend";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
-import CalendarsView from "./CalendarsView";
-import CalendarHeader from "./CalendarHeader";
-import Calendar, { ICalendarCell, IEventWCalendar } from "./Calendar";
+import { CalendarsView } from "./CalendarsView";
+import { CalendarHeader } from "./CalendarHeader";
+import { Calendar, ICalendarCell, IEventWCalendar } from "./Calendar";
 import EventFormDialog from "./EventFormDIalog";
 import { getToday } from "../helpers/dateFunctions";
 
@@ -23,12 +23,21 @@ export default function CalendarScreen() {
   const [events, setEvents] = useState<IEvent[]>([]);
   const [editingEvent, setEditingEvent] = useState<IEditingEvent | null>(null);
 
-  const weeks = generateCalendar(
-    month + "-01",
-    events,
-    calendars,
-    calendarsSelected
-  );
+  // const weeks = generateCalendar(
+  //   month + "-01",
+  //   events,
+  //   calendars,
+  //   calendarsSelected
+  // );
+  const weeks = useMemo(() => {
+    return generateCalendar(
+      month + "-01",
+      events,
+      calendars,
+      calendarsSelected
+    );
+  }, [month, events, calendars, calendarsSelected]);
+
   const firstDate = weeks[0][0].date;
   const lastDate = weeks[weeks.length - 1][6].date;
 
@@ -43,23 +52,28 @@ export default function CalendarScreen() {
     });
   }, [firstDate, lastDate]);
 
-  function toggleCalendar(i: number) {
-    const newValue = [...calendarsSelected];
-    newValue[i] = !newValue[i];
-    setCalendarsSelected(newValue);
-  }
+  const toggleCalendar = useCallback(() => {
+    return (i: number) => {
+      const newValue = [...calendarsSelected];
+      newValue[i] = !newValue[i];
+      setCalendarsSelected(newValue);
+    };
+  }, [calendarsSelected]);
 
   function refreshEvent() {
     getEventsEndpoint(firstDate, lastDate).then(setEvents);
   }
 
-  function openNewEvent(date: string) {
-    setEditingEvent({
-      date,
-      desc: "",
-      calendarId: calendars[0].id,
-    });
-  }
+  const openNewEvent = useCallback(
+    (date: string) => {
+      setEditingEvent({
+        date,
+        desc: "",
+        calendarId: calendars[0].id,
+      });
+    },
+    [calendars]
+  );
 
   return (
     <Box display="flex" height="100%" alignItems="stretch">
