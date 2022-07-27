@@ -4,7 +4,6 @@ import {
   getCalendarsEndpoint,
   getEventsEndpoint,
   ICalendar,
-  IEditingEvent,
   IEvent,
 } from "../app/backend";
 import { useCallback, useEffect, useMemo, useReducer } from "react";
@@ -16,9 +15,7 @@ import EventFormDialog from "./EventFormDIalog";
 import { getToday } from "../helpers/dateFunctions";
 import { reducer } from "../helpers/calendarsScreenReducer";
 
-export default function CalendarScreen() {
-  const { month } = useParams<{ month: string }>();
-
+function useCalendarScreenState(month: string) {
   const [state, dispatch] = useReducer(reducer, {
     calendars: [],
     calendarsSelected: [],
@@ -54,6 +51,27 @@ export default function CalendarScreen() {
       dispatch({ type: "load", payload: { events } });
     });
   }
+
+  return {
+    weeks,
+    calendars,
+    dispatch,
+    refreshEvent,
+    editingEvent,
+    calendarsSelected,
+  };
+}
+
+export default function CalendarScreen() {
+  const { month } = useParams<{ month: string }>();
+  const {
+    weeks,
+    calendars,
+    dispatch,
+    refreshEvent,
+    editingEvent,
+    calendarsSelected,
+  } = useCalendarScreenState(month);
 
   const closeDialog = useCallback(() => {
     dispatch({ type: "closeDialog" });
