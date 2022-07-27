@@ -40,6 +40,7 @@ export default function EventFormDialog(props: IEventFormDialogProps) {
 
   useEffect(() => {
     setEvent(props.event);
+    setErrors({});
   }, [props.event]);
 
   const isNew = !event?.id;

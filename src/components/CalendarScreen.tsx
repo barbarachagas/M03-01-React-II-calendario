@@ -7,28 +7,27 @@ import {
   IEditingEvent,
   IEvent,
 } from "../app/backend";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useReducer } from "react";
 import { useParams } from "react-router-dom";
 import { CalendarsView } from "./CalendarsView";
 import { CalendarHeader } from "./CalendarHeader";
 import { Calendar, ICalendarCell, IEventWCalendar } from "./Calendar";
 import EventFormDialog from "./EventFormDIalog";
 import { getToday } from "../helpers/dateFunctions";
+import { reducer } from "../helpers/calendarsScreenReducer";
 
 export default function CalendarScreen() {
   const { month } = useParams<{ month: string }>();
 
-  const [calendars, setCalendars] = useState<ICalendar[]>([]);
-  const [calendarsSelected, setCalendarsSelected] = useState<boolean[]>([]);
-  const [events, setEvents] = useState<IEvent[]>([]);
-  const [editingEvent, setEditingEvent] = useState<IEditingEvent | null>(null);
+  const [state, dispatch] = useReducer(reducer, {
+    calendars: [],
+    calendarsSelected: [],
+    events: [],
+    editingEvent: null,
+  });
 
-  // const weeks = generateCalendar(
-  //   month + "-01",
-  //   events,
-  //   calendars,
-  //   calendarsSelected
-  // );
+  const { events, calendars, calendarsSelected, editingEvent } = state;
+
   const weeks = useMemo(() => {
     return generateCalendar(
       month + "-01",
@@ -46,34 +45,19 @@ export default function CalendarScreen() {
       getCalendarsEndpoint(),
       getEventsEndpoint(firstDate, lastDate),
     ]).then(([calendars, events]) => {
-      setCalendarsSelected(calendars.map(() => true));
-      setCalendars(calendars);
-      setEvents(events);
+      dispatch({ type: "load", payload: { events, calendars } });
     });
   }, [firstDate, lastDate]);
 
-  const toggleCalendar = useCallback(() => {
-    return (i: number) => {
-      const newValue = [...calendarsSelected];
-      newValue[i] = !newValue[i];
-      setCalendarsSelected(newValue);
-    };
-  }, [calendarsSelected]);
-
   function refreshEvent() {
-    getEventsEndpoint(firstDate, lastDate).then(setEvents);
+    getEventsEndpoint(firstDate, lastDate).then(() => {
+      dispatch({ type: "load", payload: { events } });
+    });
   }
 
-  const openNewEvent = useCallback(
-    (date: string) => {
-      setEditingEvent({
-        date,
-        desc: "",
-        calendarId: calendars[0].id,
-      });
-    },
-    [calendars]
-  );
+  const closeDialog = useCallback(() => {
+    dispatch({ type: "closeDialog" });
+  }, []);
 
   return (
     <Box display="flex" height="100%" alignItems="stretch">
@@ -86,32 +70,28 @@ export default function CalendarScreen() {
         <Button
           variant="contained"
           color="primary"
-          onClick={() => openNewEvent(getToday())}
+          onClick={() => dispatch({ type: "new", payload: getToday() })}
         >
           Novo Evento
         </Button>
 
         <CalendarsView
           calendars={calendars}
-          toggleCalendar={toggleCalendar}
+          dispatch={dispatch}
           calendarsSelected={calendarsSelected}
         />
       </Box>
       <Box flex="1" flexDirection="column">
         <CalendarHeader month={month} />
-        <Calendar
-          weeks={weeks}
-          onClickDay={openNewEvent}
-          onClickEvent={setEditingEvent}
-        />
+        <Calendar weeks={weeks} dispatch={dispatch} />
         <EventFormDialog
           event={editingEvent}
           calendars={calendars}
           onSave={() => {
-            setEditingEvent(null);
+            closeDialog();
             refreshEvent();
           }}
-          onCancel={() => setEditingEvent(null)}
+          onCancel={closeDialog}
         />
       </Box>
     </Box>
