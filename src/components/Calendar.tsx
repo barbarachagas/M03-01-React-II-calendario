@@ -6,6 +6,7 @@ import TableCell from "@material-ui/core/TableCell";
 import TableContainer from "@material-ui/core/TableContainer";
 import TableHead from "@material-ui/core/TableHead";
 import TableRow from "@material-ui/core/TableRow";
+import React from "react";
 import { ICalendar, IEvent } from "../app/backend";
 
 const DAYS_OF_WEEK = ["DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SÁB"];
@@ -49,11 +50,20 @@ const useStyles = makeStyles({
 
 interface ICalendarProps {
   weeks: ICalendarCell[][];
+  onClickDay: (date: string) => void;
+  onClickEvent: (event: IEvent) => void;
 }
 
 export default function Calendar(props: ICalendarProps) {
   const classes = useStyles();
   const { weeks } = props;
+
+  function handleClick(evt: React.MouseEvent, date: string) {
+    if (evt.target === evt.currentTarget) {
+      props.onClickDay(date);
+    }
+  }
+
   return (
     <TableContainer className={classes.root} component={"div"}>
       <Table className={classes.table} aria-label="simple table">
@@ -68,12 +78,20 @@ export default function Calendar(props: ICalendarProps) {
           {weeks.map((week, i) => (
             <TableRow key={i}>
               {week.map((day) => (
-                <TableCell align="center" key={day.date}>
+                <TableCell
+                  align="center"
+                  key={day.date}
+                  onClick={(me) => handleClick(me, day.date)}
+                >
                   <div className={classes.dayOfMonth}>{day.dayOfMonth}</div>
                   {day.events.map((event) => {
                     const color = event.calendar.color;
                     return (
-                      <button key={event.id} className={classes.event}>
+                      <button
+                        key={event.id}
+                        className={classes.event}
+                        onClick={() => props.onClickEvent(event)}
+                      >
                         {event.time && (
                           <>
                             <Icon style={{ color }} fontSize="inherit">
