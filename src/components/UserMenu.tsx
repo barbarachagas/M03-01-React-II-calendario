@@ -6,13 +6,9 @@ import {
   MenuItem,
   makeStyles,
 } from "@material-ui/core";
-import React, { useState } from "react";
-import { IUser, singOutEndpoint } from "../app/backend";
-
-interface IUserMenu {
-  onSingOut: () => void;
-  user: IUser;
-}
+import React, { useContext, useState } from "react";
+import { singOutEndpoint } from "../app/backend";
+import { authContext } from "../helpers/authContext";
 
 const useStyles = makeStyles({
   userDetails: {
@@ -29,7 +25,9 @@ const useStyles = makeStyles({
   },
 });
 
-export default function UserMenu(props: IUserMenu) {
+export default function UserMenu() {
+  const { user, onSingOut } = useContext(authContext);
+
   const classes = useStyles();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
@@ -43,7 +41,6 @@ export default function UserMenu(props: IUserMenu) {
 
   function singOut() {
     singOutEndpoint();
-    props.onSingOut;
   }
 
   return (
@@ -60,10 +57,10 @@ export default function UserMenu(props: IUserMenu) {
       >
         <Box className={classes.userDetails}>
           <Avatar></Avatar>
-          <div>{props.user.name}</div>
-          <small>{props.user.email}</small>
+          <div>{user.name}</div>
+          <small>{user.email}</small>
         </Box>
-        <MenuItem onClick={props.onSingOut}>Sair</MenuItem>
+        <MenuItem onClick={singOut}>Sair</MenuItem>
       </Menu>
     </div>
   );

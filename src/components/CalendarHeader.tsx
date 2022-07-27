@@ -6,8 +6,6 @@ import { IUser } from "../app/backend";
 
 interface ICalendarHeaderProps {
   month: string;
-  onSingOut: () => void;
-  user: IUser;
 }
 
 export default function CalendarHeader(props: ICalendarHeaderProps) {
@@ -34,7 +32,7 @@ export default function CalendarHeader(props: ICalendarHeaderProps) {
       <Box flex={1} marginLeft="16px" component="h3">
         <strong>{formatMonth(month)}</strong>
       </Box>
-      <UserMenu user={props.user} onSingOut={props.onSingOut} />
+      <UserMenu />
     </Box>
   );
 }
